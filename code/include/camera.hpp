@@ -58,12 +58,12 @@ public:
         float x = (u-cx)/fx;
         float y = (cy-v)/fy;
         float z = 1;
-        Vector3f d = x * horizontal + y * up + z * direction;
-        
-        //坐标变换
-        Vector3f origin = center;
+        Vector3f d = Vector3f(x,y,z).normalized();
         Matrix3f R = Matrix3f(horizontal,-up,direction);
         Vector3f dir = R * d;
+        //坐标变换
+        Vector3f origin = center;
+        
         return Ray(origin,dir);
     }
     float fx,fy;
