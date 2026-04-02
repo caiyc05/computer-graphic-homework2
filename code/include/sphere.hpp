@@ -30,15 +30,10 @@ public:
         Vector3f dir = r.getDirection();   
         
         // 计算球心到射线上的投影长度
-        float projectionLength = Vector3f::dot(oc, dir);
-        
-        // 如果投影长度为负，且起点在球外，则射线背离球体
-        if (projectionLength < 0 && oc.length() > radius) {
-            return false;
-        }
+        float projectionLength = Vector3f::dot(oc, dir) / dir.squaredLength();
         
         // 计算球心到射线的垂直距离
-        Vector3f projectPoint = r.getOrigin() + dir * projectionLength;
+        Vector3f projectPoint = r.pointAtParameter(projectionLength);
         float distanceSquared = (projectPoint - center).squaredLength();
         
         // 垂直距离大于半径，不相交
@@ -48,8 +43,6 @@ public:
         
         // 计算交点距离
         float halfChord = sqrt(radius * radius - distanceSquared);
-        //划归为以direction长度为单位的t值
-        halfChord /= dir.length();
         
         // 分类讨论：
         float t;
@@ -70,13 +63,13 @@ public:
             return false;
         }
         //不是离相机最近的
-        if(t > h.getT()){
+        if(t >= h.getT()){
             return false;
         }
         
         // 计算法线
-        Vector3f intersectionPoint = r.pointAtParameter(t);
-        Vector3f normal = (intersectionPoint - center) / radius;  // 归一化
+        Vector3f intersectionPoint = r.getOrigin() + t*dir;
+        Vector3f normal = (intersectionPoint - center).normalized();  // 归一化
         
         
         h.set(t, material, normal);
