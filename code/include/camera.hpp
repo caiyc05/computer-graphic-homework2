@@ -44,11 +44,29 @@ public:
     PerspectiveCamera(const Vector3f &center, const Vector3f &direction,
             const Vector3f &up, int imgW, int imgH, float angle) : Camera(center, direction, up, imgW, imgH) {
         // angle is in radian.
+        this->fx = (this->height/2.0f)/tanf(angle/2.0f);
+        this->fy = this->fx;
     }
 
     Ray generateRay(const Vector2f &point) override {
         // 
+        //计算射线
+        float cx = this->width / 2;
+        float cy = this->height / 2;
+        float u = point[0];
+        float v = point[1];
+        float x = (u-cx)/fx;
+        float y = (cy-v)/fy;
+        float z = 1;
+        Vector3f d = x * horizontal + y * up + z * direction;
+        
+        //坐标变换
+        Vector3f origin = center;
+        Matrix3f R = Matrix3f(horizontal,-up,direction);
+        Vector3f dir = R * d;
+        return Ray(origin,dir);
     }
+    float fx,fy;
 };
 
 #endif //CAMERA_H
