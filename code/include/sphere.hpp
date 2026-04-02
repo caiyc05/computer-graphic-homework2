@@ -24,52 +24,63 @@ public:
     ~Sphere() override = default;
 
     bool intersect(const Ray &r, Hit &h, float tmin) override {
-    // 射线：O + t*D
-    Vector3f O = r.getOrigin();
-    Vector3f D = r.getDirection();
-
-    // 球：|X - C|² = R²
-    Vector3f C = center;
-    float R = radius;
-
-    // 构建一元二次方程 at² + bt + c = 0
-    Vector3f OC = O - C;
-    float a = Vector3f::dot(D, D);
-    float b = 2 * Vector3f::dot(OC, D);
-    float c = Vector3f::dot(OC, OC) - R * R;
-
-    // 判别式
-    float delta = b * b - 4 * a * c;
-
-    // 无实根 → 不相交
-    if (delta < 0)
-        return false;
-
-    // 求两个根
-    float sqrtDelta = sqrt(delta);
-    float t1 = (-b - sqrtDelta) / (2 * a);
-    float t2 = (-b + sqrtDelta) / (2 * a);
-
-    // 找最近的有效 t
-    float t = -1;
-
-    // 优先选小的 t（近交点）
-    if (t1 >= tmin && t1 < h.getT())
-        t = t1;
-    else if (t2 >= tmin && t2 < h.getT())
-        t = t2;
-    else
-        return false;
-
-    // 计算交点 & 法线
-    Vector3f hitPoint = r.pointAtParameter(t);
-    Vector3f normal = hitPoint - center;
-    normal.normalize();
-
-
-    // 更新交点信息
-    h.set(t, material, normal);
-    return true;
+        // 球心到射线起点
+        Vector3f oc = center - r.getOrigin();    
+        // 获取方向向量      
+        Vector3f dir = r.getDirection();   
+        
+        // 计算球心到射线上的投影长度
+        float projectionLength = Vector3f::dot(oc, dir);
+        
+        // 如果投影长度为负，且起点在球外，则射线背离球体
+        if (projectionLength < 0 && oc.length() > radius) {
+            return false;
+        }
+        
+        // 计算球心到射线的垂直距离
+        Vector3f projectPoint = r.getOrigin() + dir * projectionLength;
+        float distanceSquared = (projectPoint - center).squaredLength();
+        
+        // 垂直距离大于半径，不相交
+        if (distanceSquared > radius * radius) {
+            return false;
+        }
+        
+        // 计算交点距离
+        float halfChord = sqrt(radius * radius - distanceSquared);
+        //划归为以direction长度为单位的t值
+        halfChord /= dir.length();
+        
+        // 分类讨论：
+        float t;
+        if(oc.length() > radius){
+            //origin 在球外。此时projectionLength一定是正的
+            t = projectionLength - halfChord;
+        }
+        else if(oc.length() < radius){
+            //origin在球内
+            t = projectionLength + halfChord;
+        }
+        else{
+            //说明origin正好在球面上
+            t = 0;
+        }
+        //判断合理性
+        if(tmin > t){
+            return false;
+        }
+        //不是离相机最近的
+        if(t > h.getT()){
+            return false;
+        }
+        
+        // 计算法线
+        Vector3f intersectionPoint = r.pointAtParameter(t);
+        Vector3f normal = (intersectionPoint - center) / radius;  // 归一化
+        
+        
+        h.set(t, material, normal);
+        return true;
 }
 
 protected:
