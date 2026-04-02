@@ -41,7 +41,7 @@ public:
         //镜面反射
         float specularfactor = std::max(0.0f,Vector3f::dot(V,R));
         //光泽度s次幂
-        specularColor = pow(specularfactor,shininess);
+        specularfactor = pow(specularfactor,shininess);
 
         Vector3f diffuse = lightColor * diffuseColor * diffusefactor;
         Vector3f specular = lightColor * specularColor * specularfactor;
