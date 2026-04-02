@@ -52,7 +52,7 @@ public:
     }   
 
 private:
-    vector<Object3D*> objects;
+    std::vector<Object3D*> objects;
 
 };
 

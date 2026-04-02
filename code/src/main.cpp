@@ -39,37 +39,36 @@ int main(int argc, char *argv[]) {
     int height = camera->getHeight();
     Image image(width,height);
 
-    for(int x=0; x < width;x++){
-        for(int y=0;y < height;y++){
-            //shooting a ray
-            Ray ray = camera->generateRay(Vector2f(x,y));
-            Group* basegroup = sceneParser.getGroup();
+    for (int x = 0; x < camera->getWidth(); ++x) {
+        for (int y = 0; y < camera->getHeight(); ++y) {
+            // 计算当前像素(x,y)处相机出射光线camRay
+            Ray camRay = sceneParser.getCamera()->generateRay(Vector2f(x, y));
+            Group* baseGroup = sceneParser.getGroup();
             Hit hit;
-            //判断ray和basegroup是否有交点。并且将结果存储在hit中
-            bool isIntersect = basegroup->intersect(ray,hit,0);
-            if(isIntersect){
-                //说明有交点
-                //累加来自所有光源的光强影响
+            // 判断camRay是否和场景有交点，并返回最近交点的数据，存储在hit中
+            bool isIntersect = baseGroup->intersect(camRay, hit, 0);
+            if (isIntersect) {
                 Vector3f finalColor = Vector3f::ZERO;
-                for(int li = 0; li < sceneParser.getNumLights();li++){
+                // 找到交点之后，累加来自所有光源的光强影响
+                for (int li = 0; li < sceneParser.getNumLights(); ++li) {
                     Light* light = sceneParser.getLight(li);
-                    //获得光照以及光照
-                    Vector3f L,lightColor;
-                    light->getIllumination(ray.pointAtParameter(hit.getT()),L,lightColor);
-                    finalColor += hit.getMaterial()->Shade(ray,hit,L,lightColor);
+                    Vector3f L, lightColor;
+                    // 获得光照强度
+                    light->getIllumination(camRay.pointAtParameter(hit.getT()), L, lightColor);
+                    // 计算局部光强
+                    finalColor += hit.getMaterial()->Shade(camRay, hit, L, lightColor);
                 }
-                image.SetPixel(x,y,finalColor);
-                
-            }else{
-                //说明不存在交点
-                image.SetPixel(x,y,sceneParser.getBackgroundColor());
+                image.SetPixel(x, y, finalColor);
+            } else {
+                // 不存在交点，返回背景色
+                image.SetPixel(x, y, sceneParser.getBackgroundColor());
             }
-
         }
-
     }
 
+    // 保存图像
     image.SaveImage(outputFile.c_str());
+
     
     std::cout << "Hello! Computer Graphics!" << endl;
     return 0;

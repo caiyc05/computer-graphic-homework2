@@ -28,25 +28,22 @@ public:
         Vector3f dir = r.getDirection();
         Vector3f origin = r.getOrigin();
         
-        if(Vector3f::dot(dir,normal) == 0){
+        if(fabs(Vector3f::dot(dir,normal)) < 1e-6){
             return false;
         }
 
-        float t = -1*(d + Vector3f::dot(normal,origin)) / Vector3f::dot(dir,normal);
+        float t = (d - Vector3f::dot(normal,origin)) / Vector3f::dot(dir,normal);
 
         if(tmin > t || t < 0){
             return false;
         }
 
-        if(h.getT() < t){
+        if(h.getT() <= t){
             return false;
         }
-        // 确保法线指向外部（与视线方向夹角大于90度）
-        if (Vector3f::dot(normal, dir) > 0) {
-            normal = -normal;
-        }
-        //计算法线:由于是平面所以法线恒定为normal
-        h.set(t,material,normal);
+        
+        h.set(t, material, normal);
+        
         return true;
     }
 

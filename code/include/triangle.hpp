@@ -34,7 +34,7 @@ public:
 		// 平面求交 
 		float dot_n_d = Vector3f::dot(normal,dir);
 		// 射线与平面平行，不相交:小于一个极小的数就认为平行
-		if (dot_n_d < 1e-8) return false;
+		if (fabs(dot_n_d )< 1e-8) return false;
 
 		//重心法判断是否在三角形内部
 		//判断是否在三角形中
@@ -71,13 +71,8 @@ public:
 		if(beta + alpha > 1.0f) return false;
 
 		if(t<tmin || t > hit.getT()) return false;
-		// 法线方向修正（朝向射线）
-		Vector3f n = normal;
-		if (Vector3f::dot(n, dir) > 0){
-			n = -n;
-		}
 		// 更新碰撞信息
-		hit.set(t, material, n);
+		hit.set(t, material, normal);
 
 		return true;
 	}
